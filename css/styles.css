@@ -222,3 +222,37 @@ button:disabled {
     font-size: 0.65rem;
     border-radius: 5px 5px 9px 9px;
 }
+
+/* seat states */
+
+.seat.available,
+.seat.available:hover {
+    background-color: var(--white);
+    border-color: var(--muted);
+}
+
+.seat.available:hover {
+    background-color: #f1dfb8;
+}
+
+.seat.inspected,
+.seat.inspected:hover {
+    background-color: var(--brass);
+    border-color: var(--ink);
+    box-shadow: 0 0 0 3px rgba(184, 137, 59, 0.5);
+}
+
+.seat.in-cart,
+.seat.in-cart:hover {
+    background-color: var(--teal);
+    border-color: var(--teal);
+    color: var(--white);
+}
+
+.seat.unavailable,
+.seat.unavailable:hover {
+    background-color: var(--muted);
+    border-color: var(--muted);
+    color: #c9cdd6;
+    cursor: not-allowed;
+}

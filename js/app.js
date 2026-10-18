@@ -5,6 +5,13 @@ const state = {
     cart: []
 };
 
+const STATE_LABELS = {
+    available: "available",
+    inspected: "selected",
+    "in-cart": "in your cart",
+    unavailable: "unavailable"
+};
+
 const mapEl = document.getElementById('venue-map');
 const seatEls = new Map();
 
@@ -48,10 +55,36 @@ function renderVenue() {
     });
 }
 
+function isInCart(id) {
+    return state.cart.includes(id);
+}
+
+function getSeatState(id) {
+    const seat = state.seatMap.get(id);
+    if(seat.unavailable) return "unavailable";
+    if(isInCart(id)) return "in-cart";
+    if(state.inspectedId === id) return "inspected";
+    return "available";
+}
+
+function refreshSeat(id) {
+    const el = seatEls.get(id);
+    if(!el) return;
+    const seat = state.seatMap.get(id);
+    const seatState = getSeatState(id);
+    el.className = "seat " + seatState;
+    el.setAttribute("aria-label", "Seat " + id + ", " + seat.sectionName + ", " + formatPrice(seat.price) + ", " + STATE_LABELS[seatState]);
+}
+
+function refreshAllSeats() {
+    seatEls.forEach((el, id) => refreshSeat(id));
+}
+
 function init() {
     state.seats = buildSeats();
     state.seats.forEach(seat => state.seatMap.set(seat.id, seat));
     renderVenue();
+    refreshAllSeats();
 }
 
 init();
