@@ -80,6 +80,18 @@ function refreshAllSeats() {
     seatEls.forEach((el, id) => refreshSeat(id));
 }
 
+function inspectSeat(id) {
+    const previous = state.inspectedId;
+    state.inspectedId = id;
+    if (previous) refreshSeat(previous);
+    refreshSeat(id);
+}
+
+mapEl.addEventListener("click", e => {
+    const btn = e.target.closest(".seat");
+    if(btn) inspectSeat(btn.dataset.id);
+});
+
 function init() {
     state.seats = buildSeats();
     state.seats.forEach(seat => state.seatMap.set(seat.id, seat));
