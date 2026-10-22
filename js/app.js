@@ -12,8 +12,17 @@ const STATE_LABELS = {
     unavailable: "unavailable"
 };
 
+const STATUS_TEXT = {
+    available: "Available",
+    inspected: "Available",
+    "in-cart": "Already in your cart",
+    unavailable: "Not available"
+};
+
 const mapEl = document.getElementById('venue-map');
 const seatEls = new Map();
+const detailsEl = document.getElementById("seat-details");
+const addBtn = document.getElementById("add-to-cart");
 
 function formatPrice(amount) {
     return VENUE.currency + amount.toFixed(2);
@@ -87,16 +96,50 @@ function inspectSeat(id) {
     refreshSeat(id);
 }
 
+function renderDetails() {
+    const id = state.inspectedId;
+    if (!id) {
+        detailsEl.innerHTML = '<p class="empty">Select a seat on the map to see its details.</p>';
+        addBtn.disabled = true;
+        return;
+    }
+    const seat = state.seatMap.get(id);
+    const seatState = getSeatState(id);
+    detailsEl.innerHTML = `
+    <dl class="detail-list">
+        <dt>Seat</dt><dd>${seat.id}</dd>
+        <dt>Section</dt><dd>${seat.sectionName}</dd>
+        <dt>Row</dt><dd>${seat.row}</dd>
+        <dt>Number</dt><dd>${seat.number}</dd>
+        <dt>Category</dt><dd>${seat.categoryLabel}</dd>
+        <dt>Price</dt><dd>${formatPrice(seat.price)}</dd>
+        <dt>Status</dt><dd>${STATUS_TEXT[seatState]}</dd>
+    </dl>
+    `;
+    addBtn.disabled = seatState !== "inspected";
+}
+
+function inspectSeat(id) {
+    const previous = state.inspectedId;
+    state.inspectedId = id;
+    if (previous) refreshSeat(previous);
+    refreshSeat(id);
+    renderDetails();
+}
+
 mapEl.addEventListener("click", e => {
     const btn = e.target.closest(".seat");
     if(btn) inspectSeat(btn.dataset.id);
 });
 
+
+// init function
 function init() {
     state.seats = buildSeats();
     state.seats.forEach(seat => state.seatMap.set(seat.id, seat));
     renderVenue();
     refreshAllSeats();
+    renderDetails();
 }
 
 init();

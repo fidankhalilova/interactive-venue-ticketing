@@ -256,3 +256,19 @@ button:disabled {
     color: #c9cdd6;
     cursor: not-allowed;
 }
+
+.detail-list {
+    display: grid;
+    grid-template-columns: auto 1fr;
+    gap: 0.25rem 1rem;
+    margin: 0;
+}
+
+.detail-list dt {
+    color: var(--muted);
+}
+
+.detail-list dd {
+    margin: 0;
+    font-weight: bold;
+}
