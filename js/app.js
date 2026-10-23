@@ -23,6 +23,57 @@ const mapEl = document.getElementById('venue-map');
 const seatEls = new Map();
 const detailsEl = document.getElementById("seat-details");
 const addBtn = document.getElementById("add-to-cart");
+const viewportEl = document.getElementById("map-viewport");
+const view = { x: 0, y: 0, scale: 1 };
+const MIN_SCALE = 0.4;
+const MAX_SCALE = 3;
+const ZOOM_STEP = 1.25;
+const PAN_STEP = 60;
+
+// Map navigation (zoom, pan, reset)
+
+function clamp(value, min, max) {
+    return Math.min(max, Math.max(min, value));
+}
+
+function applyView() {
+    mapEl.style.transform = "translate(" + view.x + "px, " + view.y + "px) scale(" + view.scale + ")";
+}
+
+function clampView() {
+    const margin = 80;
+    const w = mapEl.offsetWidth * view.scale;
+    const h = mapEl.offsetHeight * view.scale;
+    view.x = clamp(view.x, margin - w, viewportEl.clientWidth - margin);
+    view.y = clamp(view.y, margin - h, viewportEl.clientHeight - margin);
+}
+
+function zoomBy(factor) {
+    const newScale = clamp(view.scale * factor, MIN_SCALE, MAX_SCALE);
+    const ratio = newScale / view.scale;
+    const cx = viewportEl.clientWidth / 2;
+    const cy = viewportEl.clientHeight / 2;
+    view.x = cx - (cx - view.x) * ratio;
+    view.y = cy - (cy - view.y) * ratio;
+    view.scale = newScale;
+    clampView();
+    applyView();
+}
+
+function panBy(dx, dy) {
+    view.x += dx;
+    view.y += dy;
+    clampView();
+    applyView();
+}
+
+function resetView() {
+    const fit = viewportEl.clientWidth / mapEl.offsetWidth;
+    view.scale = clamp(Math.min(1, fit), MIN_SCALE, MAX_SCALE);
+    view.x = (viewportEl.clientWidth - mapEl.offsetWidth * view.scale) / 2;
+    view.y = 0;
+    applyView();
+}
 
 function formatPrice(amount) {
     return VENUE.currency + amount.toFixed(2);
@@ -132,6 +183,15 @@ mapEl.addEventListener("click", e => {
     if(btn) inspectSeat(btn.dataset.id);
 });
 
+// Map Actions
+document.getElementById("zoom-in").addEventListener("click", () => zoomBy(ZOOM_STEP));
+document.getElementById("zoom-out").addEventListener("click", () => zoomBy(1 / ZOOM_STEP));
+document.getElementById("move-up").addEventListener("click", () => panBy(0, PAN_STEP));
+document.getElementById("move-down").addEventListener("click", () => panBy(0, -PAN_STEP));
+document.getElementById("move-left").addEventListener("click", () => panBy(PAN_STEP, 0));
+document.getElementById("move-right").addEventListener("click", () => panBy(-PAN_STEP, 0));
+document.getElementById("reset-view").addEventListener("click", resetView);
+
 
 // init function
 function init() {
@@ -140,6 +200,7 @@ function init() {
     renderVenue();
     refreshAllSeats();
     renderDetails();
+    resetView();
 }
 
 init();
