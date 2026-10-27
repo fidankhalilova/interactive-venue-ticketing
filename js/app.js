@@ -192,6 +192,68 @@ document.getElementById("move-left").addEventListener("click", () => panBy(PAN_S
 document.getElementById("move-right").addEventListener("click", () => panBy(-PAN_STEP, 0));
 document.getElementById("reset-view").addEventListener("click", resetView);
 
+// Cart
+
+const cartListEl = document.getElementById("cart-items");
+const cartTotalEl = document.getElementById("cart-total");
+
+function afterCartChange(id) {
+    refreshSeat(id);
+    renderDetails();
+    renderCart();
+}
+
+function addToCart(id) {
+    const seat = state.seatMap.get(id);
+    if (!seat || seat.unavailable || isInCart(id)) return;
+    state.cart.push(id);
+    afterCartChange(id);
+}
+
+function getCartTotal() {
+    return state.cart.reduce((sum, id) => sum + state.seatMap.get(id).price, 0);
+}
+
+function removeFromCart(id) {
+    const idx = state.cart.indexOf(id);
+    if (idx === -1) return;
+    state.cart.splice(idx, 1);
+    afterCartChange(id);
+}
+
+function renderCart() {
+    cartListEl.innerHTML = "";
+    if (state.cart.length === 0) {
+        const empty = document.createElement("li");
+        empty.className = "empty";
+        empty.textContent = "No tickets here.";
+        cartListEl.appendChild(empty);
+    }
+    state.cart.forEach(id => {
+        const seat = state.seatMap.get(id);
+        const li = document.createElement("li");
+
+        const text = document.createElement("span");
+        text.textContent = "Seat " + seat.id + " (" + seat.sectionName + ") - " + formatPrice(seat.price);
+        li.appendChild(text);
+
+        const removeBtn = document.createElement("button");
+        removeBtn.type = "button";
+        removeBtn.className = "remove-btn";
+        removeBtn.dataset.id = id;
+        removeBtn.textContent = "Remove";
+        removeBtn.setAttribute("aria-label", "Remove seat " + id + " from cart");
+        li.appendChild(removeBtn);
+
+        cartListEl.appendChild(li);
+    });
+    cartTotalEl.textContent = formatPrice(getCartTotal());
+}
+
+addBtn.addEventListener("click", () => {
+    if (state.inspectedId) addToCart(state.inspectedId);
+    if (btn) removeFromCart(btn.dataset.id);
+});
 
 // init function
 function init() {
@@ -200,6 +262,7 @@ function init() {
     renderVenue();
     refreshAllSeats();
     renderDetails();
+    renderCart();
     resetView();
 }
 
