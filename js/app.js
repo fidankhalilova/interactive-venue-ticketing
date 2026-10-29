@@ -5,6 +5,8 @@ const state = {
     cart: []
 };
 
+const STORAGE_KEY = "ticketmasterCart"
+
 const STATE_LABELS = {
     available: "available",
     inspected: "selected",
@@ -201,6 +203,7 @@ function afterCartChange(id) {
     refreshSeat(id);
     renderDetails();
     renderCart();
+    saveCart();
 }
 
 function addToCart(id) {
@@ -255,10 +258,36 @@ addBtn.addEventListener("click", () => {
     if (btn) removeFromCart(btn.dataset.id);
 });
 
+// Persistance
+
+function saveCart() {
+    try {
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(state.cart));
+    } catch (error) {
+        console.warn("Could not save cart: ", error);
+    }
+}
+
+function loadCart() {
+    try {
+        const raw = localStorage.getItem(STORAGE_KEY);
+        if(!raw) return [];
+        const ids = JSON.parse(raw);
+        if (!Array.isArray(ids)) return [];
+        return Array.from(new Set(ids)).filter(id => {
+            const seat = state.seatMap.get(id);
+            return seat && !seat.unavailable;
+        });
+    } catch (error) {
+        return [];
+    }
+}
+
 // init function
 function init() {
     state.seats = buildSeats();
     state.seats.forEach(seat => state.seatMap.set(seat.id, seat));
+    state.cart = loadCart();
     renderVenue();
     refreshAllSeats();
     renderDetails();
