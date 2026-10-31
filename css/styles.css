@@ -288,3 +288,54 @@ button:disabled {
     border-color: var(--danger);
     color: var(--danger);
 }
+
+@media (max-width: 900px) {
+    .layout {
+        grid-template-columns: 1fr;
+    }
+    .side-panel {
+        display: contents;
+    }
+    .details {
+        order: 1;
+    }
+    .map-panel {
+        order: 2;
+    }
+    .cart {
+        order: 3;
+    }
+
+    .map-viewport {
+        height: 60vh;
+        min-height: 320px;
+    }
+}
+
+@media (max-width: 600px) {
+    .layout {
+        padding: 0.5rem;
+        gap: 0.5rem;
+    }
+
+    .site-header {
+        padding: 0.75rem 1rem;
+    }
+
+    .map-controls button {
+        flex: 1 1 30%;
+        min-height: 44px;
+    }
+
+    #add-to-cart {
+        min-height: 48px;
+    }
+
+    .remove-btn {
+        min-height: 40px;
+    }
+
+    .legend {
+        gap: 0.5rem 0.9rem;
+    }
+}
