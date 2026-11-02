@@ -105,6 +105,7 @@ function renderVenue() {
                 const btn = document.createElement("button");
                 btn.type = "button";
                 btn.className = "seat";
+                btn.dataset.id = seat.id;
                 btn.textContent = n;
                 btn.setAttribute("aria-label", "Seat " + seat.id + ', ' + seat.sectionName + ', ' + formatPrice(category.price));
                 seatEls.set(seat.id, btn);
@@ -208,9 +209,18 @@ function afterCartChange(id) {
 
 function addToCart(id) {
     const seat = state.seatMap.get(id);
-    if (!seat || seat.unavailable || isInCart(id)) return;
+    if (!seat) return;
+    if (seat.unavailable) {
+        showMessage("Seat " + id + " is not available.");
+        return;
+    }
+    if (isInCart(id)) {
+        showMessage("Seat " + id + " is already in your cart.");
+        return;
+    }
     state.cart.push(id);
     afterCartChange(id);
+    showMessage("Seat " + id + " added to your cart.");
 }
 
 function getCartTotal() {
@@ -255,6 +265,10 @@ function renderCart() {
 
 addBtn.addEventListener("click", () => {
     if (state.inspectedId) addToCart(state.inspectedId);
+});
+
+cartListEl.addEventListener("click", e => {
+    const btn = e.target.closest(".remove-btn");
     if (btn) removeFromCart(btn.dataset.id);
 });
 
@@ -281,6 +295,17 @@ function loadCart() {
     } catch (error) {
         return [];
     }
+}
+
+
+// ----- User feedback -----
+const messageEl = document.getElementById("message");
+let messageTimer = null;
+
+function showMessage(text) {
+    messageEl.textContent = text;
+    clearTimeout(messageTimer);
+    messageTimer = setTimeout(() => { messageEl.textContent = ""; }, 3000);
 }
 
 // init function
