@@ -296,6 +296,11 @@ button:disabled {
     color: var(--ink);
 }
 
+.map-viewport:focus-visible {
+    outline: 3px solid var(--brass);
+    outline-offset: 2px;
+}
+
 @media (max-width: 900px) {
     .layout {
         grid-template-columns: 1fr;

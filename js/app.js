@@ -26,6 +26,8 @@ const seatEls = new Map();
 const detailsEl = document.getElementById("seat-details");
 const addBtn = document.getElementById("add-to-cart");
 const viewportEl = document.getElementById("map-viewport");
+const zoomInBtn = document.getElementById("zoom-in");
+const zoomOutBtn = document.getElementById("zoom-out");
 const view = { x: 0, y: 0, scale: 1 };
 const MIN_SCALE = 0.4;
 const MAX_SCALE = 3;
@@ -39,7 +41,10 @@ function clamp(value, min, max) {
 }
 
 function applyView() {
-    mapEl.style.transform = "translate(" + view.x + "px, " + view.y + "px) scale(" + view.scale + ")";
+    mapEl.style.transform =
+        "translate(" + view.x + "px, " + view.y + "px) scale(" + view.scale + ")";
+    zoomInBtn.disabled = view.scale >= MAX_SCALE - 0.001;
+    zoomOutBtn.disabled = view.scale <= MIN_SCALE + 0.001;
 }
 
 function clampView() {
@@ -298,7 +303,7 @@ function loadCart() {
 }
 
 
-// ----- User feedback -----
+// User feedback
 const messageEl = document.getElementById("message");
 let messageTimer = null;
 
@@ -307,6 +312,32 @@ function showMessage(text) {
     clearTimeout(messageTimer);
     messageTimer = setTimeout(() => { messageEl.textContent = ""; }, 3000);
 }
+
+// Nav usability
+
+viewportEl.addEventListener("keydown", e => {
+    if(e.target !== viewportEl) return;
+    const actions = {
+        ArrowUp: () => panBy(0, PAN_STEP),
+        ArrowDown: () => panBy(0, -PAN_STEP),
+        ArrowLeft: () => panBy(PAN_STEP, 0),
+        ArrowUp: () => panBy(-PAN_STEP, 0),
+        "+": () => zoomBy(ZOOM_STEP),
+        "=": () => zoomBy(ZOOM_STEP),
+        "-": () => zoomBy(1 / ZOOM_STEP),
+        "0": resetView
+    };
+    const action = actions[e.key];
+    if(action) {
+        e.preventDefault();
+        action();
+    }
+});
+
+viewportEl.addEventListener("scroll", () => {
+    viewportEl.scrollTop = 0;
+    viewportEl.scrollLeft = 0;
+})
 
 // init function
 function init() {
