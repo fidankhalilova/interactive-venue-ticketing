@@ -339,6 +339,20 @@ viewportEl.addEventListener("scroll", () => {
     viewportEl.scrollLeft = 0;
 })
 
+window.addEventListener("resize", () => {
+    clampView();
+    applyView();
+});
+
+window.addEventListener("storage", event => {
+    if (event.key !== STORAGE_KEY) return;
+    const previous = state.cart.slice();
+    state.cart = loadCart();
+    previous.concat(state.cart).forEach(refreshSeat);
+    renderDetails();
+    renderCart();
+});
+
 // init function
 function init() {
     state.seats = buildSeats();
