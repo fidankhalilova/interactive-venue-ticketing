@@ -22,3 +22,4 @@ Open `index.html` in a browser.
 - [x] Unavailable seat cannot be added
 - [x] All map controls and Reset work
 - [x] Layout checked at desktop, tablet and phone widths
+- [x] Bonus: Mouse wheel zoom and drag panning

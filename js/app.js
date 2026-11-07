@@ -28,6 +28,9 @@ const addBtn = document.getElementById("add-to-cart");
 const viewportEl = document.getElementById("map-viewport");
 const zoomInBtn = document.getElementById("zoom-in");
 const zoomOutBtn = document.getElementById("zoom-out");
+const drag = { active: false, moved: false, startX: 0, startY: 0, originX: 0, originY: 0 };
+const DRAG_THRESHOLD = 4;
+let suppressClick = false;
 const view = { x: 0, y: 0, scale: 1 };
 const MIN_SCALE = 0.4;
 const MAX_SCALE = 3;
@@ -67,6 +70,19 @@ function zoomBy(factor) {
     applyView();
 }
 
+function zoomAt(factor, clientX, clientY) {
+    const rect = viewportEl.getBoundingClientRect();
+    const px = clientX - rect.left;
+    const py = clientY - rect.top;
+    const newScale = clamp(view.scale * factor, MIN_SCALE, MAX_SCALE);
+    const ratio = newScale / view.scale;
+    view.x = px - (px - view.x) * ratio;
+    view.y = py - (py - view.y) * ratio;
+    view.scale = newScale;
+    clampView();
+    applyView();
+}
+
 function panBy(dx, dy) {
     view.x += dx;
     view.y += dy;
@@ -75,10 +91,11 @@ function panBy(dx, dy) {
 }
 
 function resetView() {
-    const fit = viewportEl.clientWidth / mapEl.offsetWidth;
-    view.scale = clamp(Math.min(1, fit), MIN_SCALE, MAX_SCALE);
+    const fitW = viewportEl.clientWidth / mapEl.offsetWidth;
+    const fitH = viewportEl.clientHeight / mapEl.offsetHeight;
+    view.scale = clamp(Math.min(1, fitW, fitH), MIN_SCALE, MAX_SCALE);
     view.x = (viewportEl.clientWidth - mapEl.offsetWidth * view.scale) / 2;
-    view.y = 0;
+    view.y = Math.max(0, (viewportEl.clientHeight - mapEl.offsetHeight * view.scale) / 2);
     applyView();
 }
 
@@ -146,13 +163,6 @@ function refreshSeat(id) {
 
 function refreshAllSeats() {
     seatEls.forEach((el, id) => refreshSeat(id));
-}
-
-function inspectSeat(id) {
-    const previous = state.inspectedId;
-    state.inspectedId = id;
-    if (previous) refreshSeat(previous);
-    refreshSeat(id);
 }
 
 function renderDetails() {
@@ -321,7 +331,7 @@ viewportEl.addEventListener("keydown", e => {
         ArrowUp: () => panBy(0, PAN_STEP),
         ArrowDown: () => panBy(0, -PAN_STEP),
         ArrowLeft: () => panBy(PAN_STEP, 0),
-        ArrowUp: () => panBy(-PAN_STEP, 0),
+        ArrowRight: () => panBy(-PAN_STEP, 0),
         "+": () => zoomBy(ZOOM_STEP),
         "=": () => zoomBy(ZOOM_STEP),
         "-": () => zoomBy(1 / ZOOM_STEP),
@@ -337,9 +347,36 @@ viewportEl.addEventListener("keydown", e => {
 viewportEl.addEventListener("scroll", () => {
     viewportEl.scrollTop = 0;
     viewportEl.scrollLeft = 0;
-})
+});
+
+viewportEl.addEventListener("wheel", e => {
+    e.preventDefault();
+    zoomAt(Math.exp(-e.deltaY * 0.0015), e.clientX, e.clientY);
+}, { passive: false });
+
+viewportEl.addEventListener("pointerdown", event => {
+    if (event.pointerType !== "mouse" || event.button !== 0) return;
+    drag.active = true;
+    drag.moved = false;
+    drag.startX = event.clientX;
+    drag.startY = event.clientY;
+    drag.originX = view.x;
+    drag.originY = view.y;
+});
+
+viewportEl.addEventListener("click", event => {
+    if (suppressClick) {
+        event.stopPropagation();
+        event.preventDefault();
+        suppressClick = false;
+    }
+}, true);
+
+
+// Window events
 
 window.addEventListener("resize", () => {
+    resetView();
     clampView();
     applyView();
 });
@@ -351,6 +388,27 @@ window.addEventListener("storage", event => {
     previous.concat(state.cart).forEach(refreshSeat);
     renderDetails();
     renderCart();
+});
+
+window.addEventListener("pointermove", event => {
+    if (!drag.active) return;
+    const dx = event.clientX - drag.startX;
+    const dy = event.clientY - drag.startY;
+    if (!drag.moved && Math.hypot(dx, dy) < DRAG_THRESHOLD) return;
+    drag.moved = true;
+    viewportEl.classList.add("dragging");
+    view.x = drag.originX + dx;
+    view.y = drag.originY + dy;
+    clampView();
+    applyView();
+});
+
+window.addEventListener("pointerup", () => {
+    if (!drag.active) return;
+    drag.active = false;
+    viewportEl.classList.remove("dragging");
+    suppressClick = drag.moved;
+    setTimeout(() => { suppressClick = false; }, 0);
 });
 
 // init function

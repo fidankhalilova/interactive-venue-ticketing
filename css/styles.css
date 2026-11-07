@@ -55,7 +55,6 @@ h1, h2 {
 }
 
 .side-panel {
-    margin-top: 1rem;
     display: flex;
     flex-direction: column;
     gap: 1rem;
@@ -299,6 +298,15 @@ button:disabled {
 .map-viewport:focus-visible {
     outline: 3px solid var(--brass);
     outline-offset: 2px;
+}
+
+.map-viewport {
+    cursor: grab;
+    user-select: none;
+}
+
+.map-viewport.dragging {
+    cursor: grabbing;
 }
 
 @media (max-width: 900px) {
